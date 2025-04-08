@@ -4,6 +4,19 @@ import * as THREE from 'three'
 import JSON5 from 'json5'
 import { OrbitControls } from './orbit-controls'
 
+const EXAMPLE_SPHERES = [
+  { x: 0, y: 0, z: 0 },
+  { x: 0, y: 1, z: 0 },
+  { x: 1, y: 1, z: 0 },
+  { x: 1, y: 0, z: 0 },
+  { x: 0, y: 0, z: 1 },
+  { x: 0, y: 1, z: 1 },
+  { x: 1, y: 1, z: 1 },
+  { x: 1, y: 0, z: 1 },
+]
+
+const DEFAULT_jSON = JSON.stringify(EXAMPLE_SPHERES, null, 2)
+
 function crearEtiqueta(texto: string, color: string) {
   const canvas = document.createElement('canvas')
   const ctx = canvas.getContext('2d')
@@ -27,7 +40,9 @@ export default function Viewer() {
   const sceneRef = useRef<THREE.Scene | null>(null)
   const [sphereSize, setSphereSize] = useState(0.2)
   const [sphereColor, setSphereColor] = useState('#0077ff')
-  const sphereRefs = useRef<THREE.Mesh[]>([]) // Guardamos referencias
+  const [rawJson, setRawJson] = useState(DEFAULT_jSON)
+  const sphereRefs = useRef<THREE.Mesh[]>([])
+  const [panelVisible, setPanelVisible] = useState(false)
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -70,6 +85,15 @@ export default function Viewer() {
     etiquetaZ.position.set(0, 0, 6)
     scene.add(etiquetaZ)
 
+    // ADD EXAMPLE SPHERES
+    EXAMPLE_SPHERES.forEach((pos) => {
+      const sphereGeom = new THREE.SphereGeometry(sphereSize, 16, 16)
+      const sphereMat = new THREE.MeshBasicMaterial({ color: sphereColor })
+      const sphere = new THREE.Mesh(sphereGeom, sphereMat)
+      sphere.position.set(pos.x, pos.y, pos.z)
+      scene.add(sphere)
+    })
+
     let isMounted = true
     function animate() {
       if (!isMounted) return
@@ -95,119 +119,100 @@ export default function Viewer() {
     }
   }, [])
 
-  const handlePasteAndRender = async () => {
+  const handleRender = () => {
+    let parsed: any
     try {
-      const text = await navigator.clipboard.readText()
-      let parsed: any
-
+      parsed = JSON.parse(rawJson)
+    } catch {
       try {
-        parsed = JSON.parse(text)
+        parsed = JSON5.parse(rawJson)
       } catch {
-        try {
-          parsed = JSON5.parse(text)
-        } catch {
-          alert('No se pudo parsear el texto como JSON o JSON5.')
-          return
-        }
+        alert('No se pudo parsear el texto como JSON o JSON5.')
+        return
       }
+    }
 
-      if (
-        Array.isArray(parsed) &&
-        parsed.every(
-          (item) =>
-            typeof item === 'object' &&
-            item !== null &&
-            typeof item.x === 'number' &&
-            typeof item.y === 'number' &&
-            typeof item.z === 'number'
-        )
-      ) {
-        if (!sceneRef.current) return
+    if (
+      Array.isArray(parsed) &&
+      parsed.every(
+        (item) =>
+          typeof item === 'object' &&
+          item !== null &&
+          typeof item.x === 'number' &&
+          typeof item.y === 'number' &&
+          typeof item.z === 'number'
+      )
+    ) {
+      if (!sceneRef.current) return
+      sphereRefs.current.forEach((s) => sceneRef.current!.remove(s))
+      sphereRefs.current = []
 
-        // Eliminar esferas anteriores si es necesario
-        sphereRefs.current.forEach((s) => sceneRef.current!.remove(s))
-        sphereRefs.current = []
+      const spheres = parsed.map((pos) => {
+        const sphereGeom = new THREE.SphereGeometry(sphereSize, 16, 16)
+        const sphereMat = new THREE.MeshBasicMaterial({ color: sphereColor })
+        const sphere = new THREE.Mesh(sphereGeom, sphereMat)
+        sphere.position.set(pos.x, pos.y, pos.z)
+        sceneRef.current!.add(sphere)
+        return sphere
+      })
 
-        const spheres = parsed.map((pos) => {
-          const sphereGeom = new THREE.SphereGeometry(sphereSize, 16, 16)
-          const sphereMat = new THREE.MeshStandardMaterial({
-            color: sphereColor,
-          })
-          const sphere = new THREE.Mesh(sphereGeom, sphereMat)
-          sphere.position.set(pos.x, pos.y, pos.z)
-          sceneRef.current!.add(sphere)
-          return sphere
-        })
-
-        sphereRefs.current = spheres
-      } else {
-        alert('El contenido no es válido. Debe ser un array con x, y, z.')
-      }
-    } catch (err) {
-      alert('Error al leer o parsear el portapapeles.')
-      console.error(err)
+      sphereRefs.current = spheres
+    } else {
+      alert('El contenido no es válido. Debe ser un array con x, y, z.')
     }
   }
 
   return (
     <>
-      {/* Botón flotante */}
+      {panelVisible && (
+        <div className="admin-panel">
+          <div className="admin-control">
+            <label>Color:</label>
+            <input
+              type="color"
+              value={sphereColor}
+              onChange={(e) => setSphereColor(e.target.value)}
+            />
+          </div>
+
+          <div className="admin-control">
+            <label>Tamaño:</label>
+            <input
+              type="number"
+              min="0.05"
+              step="0.05"
+              value={sphereSize}
+              onChange={(e) => setSphereSize(Number(e.target.value))}
+            />
+          </div>
+
+          <div className="admin-control">
+            <label>Datos (JSON):</label>
+            <textarea
+              value={rawJson}
+              onChange={(e) => setRawJson(e.target.value)}
+              rows={6}
+              style={{ width: '100%' }}
+            />
+            <button className="admin-button" onClick={() => setRawJson('[]')}>
+              Limpiar
+            </button>
+          </div>
+
+          <button className="admin-button" onClick={handleRender}>
+            Renderizar
+          </button>
+        </div>
+      )}
+
       <button
-        onClick={handlePasteAndRender}
-        style={{
-          position: 'absolute',
-          top: 20,
-          left: '50%',
-          zIndex: 10,
-          padding: '10px 20px',
-          fontSize: '16px',
-          backgroundColor: '#4F46E5',
-          color: 'white',
-          border: 'none',
-          borderRadius: '12px',
-          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.15)',
-          cursor: 'pointer',
-          transform: 'translateX(-50%)',
+        className="toggle-admin-btn"
+        onClick={() => {
+          setPanelVisible((prev) => !prev)
         }}
       >
-        Pegar y mostrar esferas
+        🛠️
       </button>
-
-      {/* Panel lateral de administración */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 80,
-          left: 20,
-          padding: '12px',
-          borderRadius: '12px',
-          backgroundColor: '#ffffffcc',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          zIndex: 10,
-        }}
-      >
-        <div style={{ marginBottom: '8px' }}>
-          <label>Color:</label>
-          <input
-            type="color"
-            value={sphereColor}
-            onChange={(e) => setSphereColor(e.target.value)}
-            style={{ marginLeft: '8px' }}
-          />
-        </div>
-
-        <div style={{ marginBottom: '8px' }}>
-          <label>Tamaño:</label>
-          <input
-            type="number"
-            min="0.05"
-            step="0.05"
-            value={sphereSize}
-            onChange={(e) => setSphereSize(Number(e.target.value))}
-            style={{ marginLeft: '8px', width: '60px' }}
-          />
-        </div>
-      </div>
 
       <div ref={containerRef} style={{ width: '100%', height: '100vh' }} />
     </>
