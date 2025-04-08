@@ -121,14 +121,14 @@ class OrbitControls extends EventDispatcher {
       LEFT: 'ArrowLeft',
       UP: 'ArrowUp',
       RIGHT: 'ArrowRight',
-      BOTTOM: 'ArrowDown',
+      BOTTOM: 'ArrowDown'
     }
 
     // Mouse buttons
     this.mouseButtons = {
       LEFT: MOUSE.ROTATE,
       MIDDLE: MOUSE.DOLLY,
-      RIGHT: MOUSE.PAN,
+      RIGHT: MOUSE.PAN
     }
 
     // Touch fingers
@@ -192,7 +192,7 @@ class OrbitControls extends EventDispatcher {
       const twoPI = 2 * Math.PI
 
       return function update() {
-        const position = scope.object.position
+        const { position } = scope.object
 
         offset.copy(position).sub(scope.target)
 
@@ -337,7 +337,7 @@ class OrbitControls extends EventDispatcher {
       TOUCH_ROTATE: 3,
       TOUCH_PAN: 4,
       TOUCH_DOLLY_PAN: 5,
-      TOUCH_DOLLY_ROTATE: 6,
+      TOUCH_DOLLY_ROTATE: 6
     }
 
     let state = STATE.NONE
@@ -417,7 +417,7 @@ class OrbitControls extends EventDispatcher {
 
         if (scope.object.isPerspectiveCamera) {
           // perspective
-          const position = scope.object.position
+          const { position } = scope.object
           offset.copy(position).sub(scope.target)
           let targetDistance = offset.length()
 
@@ -591,7 +591,7 @@ class OrbitControls extends EventDispatcher {
     }
 
     function handleTouchStartRotate(event: TouchEvent) {
-      if (event.touches.length == 1) {
+      if (event.touches.length === 1) {
         rotateStart.set(event.touches[0].pageX, event.touches[0].pageY)
       } else {
         const x = 0.5 * (event.touches[0].pageX + event.touches[1].pageX)
@@ -602,7 +602,7 @@ class OrbitControls extends EventDispatcher {
     }
 
     function handleTouchStartPan(event: TouchEvent) {
-      if (event.touches.length == 1) {
+      if (event.touches.length === 1) {
         panStart.set(event.touches[0].pageX, event.touches[0].pageY)
       } else {
         const x = 0.5 * (event.touches[0].pageX + event.touches[1].pageX)
@@ -634,7 +634,7 @@ class OrbitControls extends EventDispatcher {
     }
 
     function handleTouchMoveRotate(event: TouchEvent) {
-      if (event.touches.length == 1) {
+      if (event.touches.length === 1) {
         rotateEnd.set(event.touches[0].pageX, event.touches[0].pageY)
       } else {
         const x = 0.5 * (event.touches[0].pageX + event.touches[1].pageX)
@@ -655,7 +655,7 @@ class OrbitControls extends EventDispatcher {
     }
 
     function handleTouchMovePan(event: TouchEvent) {
-      if (event.touches.length == 1) {
+      if (event.touches.length === 1) {
         panEnd.set(event.touches[0].pageX, event.touches[0].pageY)
       } else {
         const x = 0.5 * (event.touches[0].pageX + event.touches[1].pageX)
@@ -1028,15 +1028,15 @@ class OrbitControls extends EventDispatcher {
 
     scope.domElement.addEventListener('pointerdown', onPointerDown)
     scope.domElement.addEventListener('wheel', onMouseWheel, {
-      passive: false,
+      passive: false
     })
 
     scope.domElement.addEventListener('touchstart', onTouchStart, {
-      passive: false,
+      passive: false
     })
     scope.domElement.addEventListener('touchend', onTouchEnd)
     scope.domElement.addEventListener('touchmove', onTouchMove, {
-      passive: false,
+      passive: false
     })
 
     // force an update at start

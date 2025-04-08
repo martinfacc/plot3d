@@ -1,4 +1,3 @@
-// components/Viewer.tsx
 import { useEffect, useRef, useState } from 'react'
 import * as THREE from 'three'
 import JSON5 from 'json5'
@@ -12,7 +11,7 @@ const EXAMPLE_SPHERES = [
   { x: 0, y: 0, z: 1 },
   { x: 0, y: 1, z: 1 },
   { x: 1, y: 1, z: 1 },
-  { x: 1, y: 0, z: 1 },
+  { x: 1, y: 0, z: 1 }
 ]
 
 const DEFAULT_jSON = JSON.stringify(EXAMPLE_SPHERES, null, 2)
@@ -85,7 +84,6 @@ export default function Viewer() {
     etiquetaZ.position.set(0, 0, 6)
     scene.add(etiquetaZ)
 
-    // ADD EXAMPLE SPHERES
     EXAMPLE_SPHERES.forEach((pos) => {
       const sphereGeom = new THREE.SphereGeometry(sphereSize, 16, 16)
       const sphereMat = new THREE.MeshBasicMaterial({ color: sphereColor })
