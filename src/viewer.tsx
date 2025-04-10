@@ -84,14 +84,6 @@ export default function Viewer() {
     etiquetaZ.position.set(0, 0, 6)
     scene.add(etiquetaZ)
 
-    EXAMPLE_SPHERES.forEach((pos) => {
-      const sphereGeom = new THREE.SphereGeometry(sphereSize, 16, 16)
-      const sphereMat = new THREE.MeshBasicMaterial({ color: sphereColor })
-      const sphere = new THREE.Mesh(sphereGeom, sphereMat)
-      sphere.position.set(pos.x, pos.y, pos.z)
-      scene.add(sphere)
-    })
-
     let isMounted = true
     function animate() {
       if (!isMounted) return
@@ -159,6 +151,12 @@ export default function Viewer() {
       alert('El contenido no es válido. Debe ser un array con x, y, z.')
     }
   }
+
+  useEffect(() => {
+    if (sceneRef.current) {
+      handleRender()
+    }
+  }, [])
 
   return (
     <>
